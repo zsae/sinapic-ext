@@ -1,0 +1,34 @@
+#spe-container{
+	position: fixed;
+	background: white;
+	top: 20px;
+	right: 20px;
+	width: 300px;
+	box-shadow: 0 1px 3px rgba(0,0,0,.3)    ;
+	border-radius: 4px;
+	overflow: hidden;
+	z-index: 1988;
+}
+	#spe-title{
+		font-size: 15px;
+		margin: 0;
+		padding: 10px;
+		text-align: center;
+		background: #337ab7;
+		color:white;
+		text-shadow: 0 1px 1px black;
+		cursor:move;
+	}
+		#spe-title a{
+			color:white;
+			border-bottom: 1px dotted white;
+			text-decoration: none;
+		}
+		#spe-title a:hover{
+			border-bottom-style: solid;
+		}
+	#spe-iframe{
+		border: 0;
+		width: 100%;
+		height: 280px;
+	}
