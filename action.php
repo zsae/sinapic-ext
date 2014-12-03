@@ -142,7 +142,7 @@ class spe{
 			die(json_encode($output));
 		}
 		
-		$file_name = date('YmdHis') . rand(100,999) . '.' . $file_ext;
+		$file_name = self::get_client_ip() . '-' . date('YmdHis') . rand(100,999) . '.' . $file_ext;
 
 		$upload_dir = dirname(__FILE__) . '/uploads/';
 		$upload_url = HOME_URL . '/uploads/';
@@ -151,7 +151,7 @@ class spe{
 
 		$c = new SaeTClientV2(AKEY,SKEY,$token);
 		$callback = $c->upload(date('Y-m-d H:i:s ' . rand(100,999)) ,$file_url);
-		unlink($upload_dir . $file_name);
+		//unlink($upload_dir . $file_name);
 
 		/** 
 		 * get callback
@@ -193,5 +193,8 @@ class spe{
 	}
 	private static function get_token_form_cookie(){
 		return isset($_COOKIE['spe-token']) ? base64_decode($_COOKIE['spe-token']) : null;
+	}
+	private function get_client_ip(){
+		return preg_replace( '/[^0-9a-fA-F:., ]/', '',$_SERVER['REMOTE_ADDR'] );
 	}
 }

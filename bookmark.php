@@ -21,7 +21,7 @@
 		css.href = css_url;
 		D.getElementsByTagName('head')[0].appendChild(css);
 		
-	})(document,'#js','#css','<?php echo HOME_URL;?>/static/js/bookmark.js?v=<?php echo VERSION;?>','<?php echo HOME_URL;?>/static/css/bookmark.css?v=<?php echo VERSION;?>','spe');">Sinapic-Ext v<?php echo VERSION;?></a>
+	})(document,'#js','#css','<?php echo HOME_URL;?>/static/js/bookmark.js?v=<?php echo VERSION;?>','<?php echo HOME_URL;?>/static/css/bookmark.css?v=<?php echo VERSION;?>','spe');">屌图床Ext - Sinapic-Ext v<?php echo VERSION;?></a>
 	</h1>
 	<h2>Just click the link from your bookmark when you upload images.</h2>
 	<h3><a href="http://ww3.sinaimg.cn/large/686ee05djw1eihtkzlg6mj216y16ydll.jpg" target="_blank" title="Donate by Alipay">Donate me by Alipay (QR code)</a></h3>

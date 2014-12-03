@@ -67,7 +67,6 @@
 			})
 		}
 		this.init = function(){
-			cache.$fm = $(that.config.fm_id).show();
 			file.init();
 		}
 		var file = {
@@ -104,7 +103,7 @@
 				cache.file = cache.files[0];
 				//start upload
 				file.upload(cache.files[0]);
-				cache.$file.hide();
+				// cache.$fm.hide();
 			},
 			drop_enter : function(e){
 				
@@ -186,7 +185,8 @@
 							 * reset
 							 */
 							cache.file_i = 0;
-							cache.$file.val('').show();
+							cache.$file.val('');
+							// cache.$fm.show();
 						/** 
 						 * upload next pic
 						 */
