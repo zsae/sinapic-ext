@@ -152,7 +152,7 @@ class spe{
 			$upload_dir = dirname(__FILE__) . '/uploads/';
 		}
 		
-		$file_path = $upload_url . $file_name;
+		$file_path = $upload_dir . $file_name;
 		
 		file_put_contents($file_path,$file_b64);
 
