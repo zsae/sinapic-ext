@@ -131,7 +131,7 @@ class spe{
 		);
 
 
-		set_time_limit(0);
+		@set_time_limit(0);
 		$file_ext = explode('.',$file_name);
 		$file_ext = $file_ext[count($file_ext) - 1];
 
@@ -143,14 +143,21 @@ class spe{
 		}
 		
 		$file_name = self::get_client_ip() . '-' . date('YmdHis') . rand(100,999) . '.' . $file_ext;
-
-		$upload_dir = dirname(__FILE__) . '/uploads/';
-		$upload_url = HOME_URL . '/uploads/';
-		$file_url = $upload_url . $file_name;
-		file_put_contents($upload_dir . $file_name,$file_b64);
+		/** 
+		 * sea
+		 */
+		if(defined('SAE_TMP_PATH')){
+			$upload_dir = SAE_TMP_PATH . '/';
+		}else{
+			$upload_dir = dirname(__FILE__) . '/uploads/';
+		}
+		
+		$file_path = $upload_url . $file_name;
+		
+		file_put_contents($file_path,$file_b64);
 
 		$c = new SaeTClientV2(AKEY,SKEY,$token);
-		$callback = $c->upload(date('Y-m-d H:i:s ' . rand(100,999)) ,$file_url);
+		$callback = $c->upload(date('Y-m-d H:i:s ' . rand(100,999)) ,$file_path);
 		//unlink($upload_dir . $file_name);
 
 		/** 
@@ -171,7 +178,7 @@ class spe{
 		 */
 		}else if(is_array($callback) && isset($callback['error_code'])){
 			$output['status'] = 'error';
-			$output['code'] = 'too_fast';
+			$output['code'] = 'unknow_error';
 			$output['msg'] = $callback['error'];
 			die(json_encode($output));
 		/** 

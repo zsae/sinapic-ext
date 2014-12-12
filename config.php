@@ -1,5 +1,5 @@
 <?php
-define('VERSION', '1.0.1');
+define('VERSION', '1.0.2');
 define('DES_URL','http://inn-studio.com/sinapic-ext');
 
 //define('HOME_URL' , 'http://localhost/sinapic-ext');
