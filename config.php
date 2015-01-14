@@ -1,8 +1,8 @@
 <?php
-define('VERSION', '1.0.3');
+define('VERSION', '1.1.0');
 define('DES_URL','http://inn-studio.com/sinapic-ext');
 
-//define('HOME_URL' , 'http://localhost/sinapic-ext');
+// define('HOME_URL' , 'http://localhost/sinapic-ext');
 define('HOME_URL' , 'http://spe.inn-studio.com');
 
 define('AKEY' , '4103217221');

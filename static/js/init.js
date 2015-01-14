@@ -1,13 +1,13 @@
 (function(D){
-	var exports = {};
 	//sinapic-ext class
-	exports.spe = function(){
+	function spe(){
 		var that = this;
 		this.config = {
 			file_id : '#spe-file',
 			upload_btn_id : '#spe-upload-btn',
 			fm_id : '#spe-fm',
 			files_container_id : '#files-container',
+			progress_bar_id : '#progress-bar',
 			lang : {
 				M00001 : 'Loading, please wait...',
 				M00002 : 'Select or Drag image into here',
@@ -46,6 +46,7 @@
 			files : false
 		}
 		this.check_authorize = function(){
+			upload_tip('loading',that.config.lang.M00001);
 			$.ajax({
 				url : that.config.process_url,
 				type : 'post',
@@ -76,7 +77,8 @@
 				cache.$file = $(that.config.file_id);
 				cache.$upload_btn = $(that.config.upload_btn_id);
 				cache.$files_container = $(that.config.files_container_id);
-
+				cache.$progress_bar = $(that.config.progress_bar_id);
+				
 				//cache.$file[0].addEventListener('drop',function(e){
 				//	_this.select(e);
 				//}, false);
@@ -120,7 +122,7 @@
 				cache.start_time = new Date();
 
 
-				upload_tip('info',format(that.config.lang.M00005,cache.file_i + 1,cache.file_count));
+				upload_tip('loading',format(that.config.lang.M00005,cache.file_i + 1,cache.file_count));
 
 				reader.onload = function (evt) {
 					_this.submission.init(evt.target.result.split(',')[1]);
@@ -130,29 +132,49 @@
 			submission : {
 				init : function(base64){
 					var _this = this;
-					$.ajax({
-						url : that.config.process_url,
-						type : 'post',
-						dataType : 'json',
-						data : {
-							action : 'upload',
-							file_name : cache.files[cache.file_i].name,
-							file_b64 : base64
+					
+					var fd = new FormData(),
+					xhr = new XMLHttpRequest();
+					fd.append('file',cache.files[cache.file_i]);
+					xhr.open('post',that.config.process_url + '?action=upload');
+					xhr.onload = _this.done;
+					
+					xhr.onreadystatechange = function(){
+						if (xhr && xhr.readyState === 4) {
+							status = xhr.status;
+							if (status >= 200 && status < 300 || status === 304) {
+							
+							}else{
+								_this.fail();
+							}
 						}
-					}).done(function(data){
-						_this.done(data);
-					}).fail(function(){
-						_this.fail();
-					}).always(function(){
-						_this.always();
-					});
+						cache.is_uploading = false;
+						xhr = null;
+					}
 
+					xhr.upload.onprogress = function(e){
+						if (e.lengthComputable) {
+							var percent = e.loaded / e.total * 100;		
+							cache.$progress_bar.animate({
+								width : percent + '%'
+							},500);
+							
+						}
+					}
+					xhr.send(fd);
 				},
 				done : function(data){
-					var _this = this;
+					var _this = this,
+					data = this.responseText,
+						url;
+					try{
+						data = $.parseJSON(this.responseText);
+					}catch(error){
+						data = false;
+					}
 					if(data && data.status === 'success'){
 						//upload_tip('success',that.config.lang.M00003);
-						var url = data.url,
+						var url = data.img_url,
 							args = {
 								'img_url' : url,
 								'size' : ''
@@ -283,18 +305,18 @@
 			size_str += '</select>';
 			return '' +
 '<form class="tpl" id="tpl-' + id + '" action="javascript:void(0);">'+
-	'<a class="img-link" id="img-link-' + id + '" href="' + get_img_size_url(last_img_size,img_url) + '" target="_blank">' +
-		'<img src="' + get_img_size_url('square',img_url) + '" alt="" id="img-preview-' + id + '" class="img-preview" alt="preview">' +
+	'<a class="img-link" id="img-link-' + id + '" href="' + get_img_url_by_size(last_img_size,img_url) + '" target="_blank">' +
+		'<img src="' + get_img_url_by_size('square',img_url) + '" alt="" id="img-preview-' + id + '" class="img-preview" alt="preview">' +
 	'</a>' +
 	'<div class="controls">' + 
-		'<input id="img-url-' + id + '" type="url" class="img-url form-control" value="' + get_img_size_url(last_img_size,img_url) + '" />' +
+		'<input id="img-url-' + id + '" type="url" class="img-url form-control" value="' + get_img_url_by_size(last_img_size,img_url) + '" readonly />' +
 			size_str +
 	'</div>'+
 '</form>';
 		}
 		var upload_tip = function(t,c){
 			if(!cache.$upload_tip) cache.$upload_tip = $('#upload-tip');
-			cache.$upload_tip.html(exports.status_tip(t,c)).show();
+			cache.$upload_tip.html(status_tip(t,c)).show();
 		}
 		var format = function(){
 			var ary = [];
@@ -306,7 +328,7 @@
 			});
 		}
 		/**
-		 * get_img_size_url
+		 * get_img_url_by_size
 		 * 
 		 * @params string size The img size,etc:
 		 * 						square 		(mw/mh:80)
@@ -319,13 +341,16 @@
 		 * @version 1.0.0
 		 * @author KM@INN STUDIO
 		 */
-		var get_img_size_url = function(size,img_url){
+		var get_img_url_by_size = function(size,img_url){
 			if(!size) size = 'square';
-			var file_name = img_url.split('/'),
-				file_name = file_name[file_name.length - 1],
-				host_name = img_url.substr(7).split('/')[0],
-				content = 'http://' + host_name + '/' + size + '/' + file_name;
-			return content;
+			var file_obj = img_url.split('/'),
+				len = file_obj.length,
+				basename = file_obj[len - 1],
+				old_size = file_obj[len - 2],
+				hostname = img_url.substr(0,img_url.indexOf(old_size));
+				hostname = hostname.replace('http://','https://');
+				url = hostname + size + '/' + basename;
+			return url;
 		}
 		/**
 		 * get_id
@@ -356,7 +381,7 @@
 				 */
 				$('#img-size-' + id).on('change',function(){
 					var $this = $(this),
-						img_size_url = get_img_size_url($this.val(),img_url);
+						img_size_url = get_img_url_by_size($this.val(),img_url);
 					$('#img-url-' + id).val(img_size_url).select();
 					$('#img-link-' + id).attr('href',img_size_url);
 					/**
@@ -368,10 +393,10 @@
 		}
 	}
 
-	exports.status_tip = function(t,c){
+	function status_tip(t,c){
 		return '<div class="alert alert-' + t + '" role="alert">' + c + '</div>';
 	}
-	exports.hide_no_js = function(){
+	function hide_no_js(){
 		var $no_js = $('.hide-no-js'),
 			$on_js = $('.hide-on-js');
 		$on_js[0] && $on_js.hide();
@@ -379,12 +404,12 @@
 		
 	}
 	
-	exports.init = function(){
+	function init(){
 		$(document).ready(function(){
-			exports.hide_no_js();
-			var o_spe = new exports.spe();
+			hide_no_js();
+			var o_spe = new spe();
 			o_spe.check_authorize();
 		})
 	}
-	exports.init();
+	init();
 })(document);

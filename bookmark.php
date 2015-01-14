@@ -24,7 +24,7 @@
 	})(document,'#js','#css','<?php echo HOME_URL;?>/static/js/bookmark.js?v=<?php echo VERSION;?>','<?php echo HOME_URL;?>/static/css/bookmark.css?v=<?php echo VERSION;?>','spe');">屌图床Ext - Sinapic-Ext v<?php echo VERSION;?></a>
 	</h1>
 	<h2>Just click the link from your bookmark when you upload images.</h2>
-	<h3><a href="http://ww3.sinaimg.cn/large/686ee05djw1eihtkzlg6mj216y16ydll.jpg" target="_blank" title="Donate by Alipay">Donate me by Alipay (QR code)</a></h3>
-	<h4>By <a href="http://inn-studio.com/" target="_blank" >INN STUDIO</a></h4>
+	<h3><a href="http://ww3.sinaimg.cn/large/686ee05djw1eihtkzlg6mj216y16ydll.jpg" target="_blank" title="Donate by Alipay">支持开发者 - Donate me by Alipay (QR code)</a></h3>
+	<h4>By <a href="<?php echo DES_URL;?>" target="_blank" >INN STUDIO</a></h4>
 </body>
 </html>

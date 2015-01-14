@@ -4,10 +4,8 @@
 <head>
 	<meta charset="UTF-8">
 	<title>SinaPic-Ext (屌图床-扩展版)</title>
-	<link rel="stylesheet" href="http://ajax.aspnetcdn.com/ajax/bootstrap/3.3.0/css/bootstrap.min.css">
 	<link rel="stylesheet" href="static/css/style.css?v=<?php echo VERSION;?>"/>
 	<script src="http://ajax.aspnetcdn.com/ajax/jquery/jquery-2.1.1.min.js"></script>
-	<script src="http://ajax.aspnetcdn.com/ajax/bootstrap/3.3.0/bootstrap.min.js"></script>
 	<script src="static/js/init.js?v=<?php echo VERSION;?>"></script>
 </head>
 <body>
@@ -15,7 +13,10 @@
 		<span id="spe-upload-btn" class="btn btn-link">Select or Drag image into here</span>
 		<input type="file" id="spe-file" multiple>
 	</form>
-	<div id="upload-tip" class="page-tip"><div class="alert alert-info" role="alert">Loading, please wait...</div></div>
+	<div id="progress">
+		<div id="upload-tip" class="page-tip"><div class="alert alert-info" role="alert">Loading, please wait...</div></div>
+		<div id="progress-bar"></div>
+	</div>
 	<div id="files-container"></div>
 	
 <script>

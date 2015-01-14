@@ -5,6 +5,7 @@ include dirname(__FILE__) . '/inc/saetv2.ex.class.php';
 spe::init();
 class spe{
 	public static $cookie_expire = 604800;//3600*24*7 7days
+	public static $allow_types = array('png','gif','jpg','jpeg');
 	public static function init(){
 
 		$action = isset($_REQUEST['action']) ? $_REQUEST['action'] : null;
@@ -103,93 +104,92 @@ class spe{
 			$output['msg'] = sprintf('Your are NOT authorize me yet, please click %s to athorize and %s.','<a href="' . self::get_cb_url() . '" target="_blank" class="alert-link">here</a>','<a href="javascript:location.reload();" class="alert-link">reload me</a>');
 		}else{
 			$output['status'] = 'success';
-			$output['msg'] = 'Your has authorized me, have fun!';
+			$output['msg'] = 'You authorized me, have fun!';
 		}
 		die(json_encode($output));
 	}
 	private static function action_upload(){
-		$file_name = isset($_POST['file_name']) ? $_POST['file_name'] : null;
-		$file_b64 = isset($_POST['file_b64']) ? base64_decode($_POST['file_b64']) : null;
-		$token = self::get_token_form_cookie();
-		if(empty($token)){
-			$output['status'] = 'error';
-			$output['code'] = 'invaild_token';
-			$output['msg'] = 'Sorry, token is invaild';
-			die(json_encode($output));
-		}
-		if(empty($file_name) || empty($file_b64)){
-			$output['status'] = 'error';
-			$output['code'] = 'invaild_file';
-			$output['msg'] = 'Sorry, file is invaild';
-			die(json_encode($output));
-		}
-
-		$allow_types = array(
-			'jpg',
-			'png',
-			'gif'
-		);
-
-
-		@set_time_limit(0);
-		$file_ext = explode('.',$file_name);
-		$file_ext = $file_ext[count($file_ext) - 1];
-
-		if(!in_array($file_ext,$allow_types)){
-			$output['status'] = 'error';
-			$output['code'] = 'invaild_type';
-			$output['msg'] = 'Sorry, file type is invaild';
-			die(json_encode($output));
-		}
-		
-		$file_name = self::get_client_ip() . '-' . date('YmdHis') . rand(100,999) . '.' . $file_ext;
+		$file = isset($_FILES['file']) ? $_FILES['file'] : array();
+		// var_dump($file);exit;
+		$file_name = isset($file['name']) ? $file['name'] : null;
+		$file_type = isset($file['type']) ? explode('/',$file['type']) : array(); /** fuck you php 5.3 */
+		$file_type = !empty($file_type) ? $file_type[1] : null;
+		$tmp_name = isset($file['tmp_name']) ? $file['tmp_name'] : null;
 		/** 
-		 * sea
+		 * check upload error
 		 */
-		if(defined('SAE_TMP_PATH')){
-			$upload_dir = SAE_TMP_PATH . '/';
-		}else{
-			$upload_dir = dirname(__FILE__) . '/uploads/';
+		if(!isset($file['error']) || $file['error'] != 0){
+			$output['status'] = 'error';
+			$output['msg'] = sprintf('Upload failed, file has an error code: %s',$file['code']);
+			$output['code'] = 'file_has_error_code';
+			die(json_encode($output));
 		}
-		
-		$file_path = $upload_dir . $file_name;
-		
-		file_put_contents($file_path,$file_b64);
+		/** 
+		 * check file params
+		 */
+		if(!$file_name || !$file_type || !$tmp_name){
+			$output['status'] = 'error';
+			$output['msg'] = 'Not enough params.';
+			$output['code'] = 'not_enough_params';
+			die(json_encode($output));
+		}
+		/** 
+		 * check file type
+		 */
+		if(!in_array($file_type,self::$allow_types)){
+			$output['status'] = 'error';
+			$output['msg'] = 'Invalid file type.';
+			$output['code'] = 'invalid_file_type';
+			die(json_encode($output));
+		}
+		/** 
+		 * check authorization
+		 */
+		if(!self::get_token_form_cookie()){
+			$output['status'] = 'error';
+			$output['code'] = 'no_authorize';
+			$output['msg'] = 'Please use your Sina Weibo account to authorize the plugin.';
+			die(json_encode($output));
+		}
+		include dirname(__FILE__) . '/inc/saetv2.ex.class.php';
 
-		$c = new SaeTClientV2(AKEY,SKEY,$token);
-		$callback = $c->upload(date('Y-m-d H:i:s ' . rand(100,999)) ,$file_path);
-		//unlink($upload_dir . $file_name);
+		$c = new SaeTClientV2(AKEY,SKEY,self::get_token_form_cookie());
+		$callback = $c->upload(date('Y-m-d H:i:s ' . rand(100,999)) . ' Upload by SinapicExt',$tmp_name);
+		
+		unlink($tmp_name);
 
 		/** 
 		 * get callback
 		 */
 		if(is_array($callback) && isset($callback['bmiddle_pic'])){
 			$output['status'] = 'success';
-			$output['url'] = $callback['bmiddle_pic'];
+			$output['img_url'] = str_ireplace('http://','https://',$callback['bmiddle_pic']);
 			/** 
 			 * destroy after upload 
 			 */
-			//if(isset($options['destroy_after_upload'])){
-				$c->destroy($callback['id']);
-			//}
-			die(json_encode($output));
+			sleep(1);
+			$c->destroy($callback['id']);
 		/** 
-		 * too fast
+		 * got callback error code
 		 */
 		}else if(is_array($callback) && isset($callback['error_code'])){
 			$output['status'] = 'error';
-			$output['code'] = 'unknow_error';
 			$output['msg'] = $callback['error'];
-			die(json_encode($output));
 		/** 
 		 * unknown error
 		 */
 		}else{
+			ob_start();
+			var_dump($callback);
+			$detail = ob_get_contents();
+			ob_end_clean();
+			
 			$output['status'] = 'error';
-			$output['code'] = 'unknow_error';
-			$output['msg'] = sprintf('Sorry, upload failed. Please try again later or contact the plugin author. Weibo returns an error message: %s',json_encode($callback));
-			die(json_encode($output));
+			$output['code'] = 'unknown';
+			$output['detail'] = $detail;
+			$output['msg'] = sprintf('Sorry, upload failed. Please try again later or contact the plugin author. The reasons for this situation maybe the Weibo server does not receive the file from your server. Weibo returns an error message: %s',json_encode($callback));
 		}
+		die(json_encode($output));
 	}
 	private static function get_cb_url(){
 		$uri = HOME_URL . '/action.php?action=set-auth';
